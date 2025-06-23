@@ -120,12 +120,15 @@ class TenancyServiceProvider extends ServiceProvider
 
     protected function mapRoutes()
     {
-        $this->app->booted(function () {
-            if (file_exists(base_path('routes/tenant.php'))) {
-                Route::namespace(static::$controllerNamespace)
-                    ->group(base_path('routes/tenant.php'));
-            }
-        });
+        if (file_exists(base_path('routes/tenant.php'))) {
+            Route::middleware([
+                'api', // Usa o grupo de middleware 'api' que acabamos de ajustar
+                \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+                \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+            ])
+            ->prefix('api') // Adiciona o prefixo /api automaticamente
+            ->group(base_path('routes/tenant.php'));
+        }
     }
 
     protected function makeTenancyMiddlewareHighestPriority()
@@ -135,6 +138,7 @@ class TenancyServiceProvider extends ServiceProvider
             Middleware\PreventAccessFromCentralDomains::class,
 
             Middleware\InitializeTenancyByDomain::class,
+            \Illuminate\Session\Middleware\StartSession::class,
             Middleware\InitializeTenancyBySubdomain::class,
             Middleware\InitializeTenancyByDomainOrSubdomain::class,
             Middleware\InitializeTenancyByPath::class,
