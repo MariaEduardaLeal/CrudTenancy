@@ -2,31 +2,23 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TransactionController;
-use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 /*
 |--------------------------------------------------------------------------
 | Tenant Routes
 |--------------------------------------------------------------------------
-|
-| Here you can register the tenant routes for your application.
-| These routes are loaded by the TenantRouteServiceProvider.
-|
-| Feel free to customize them however you want. Good luck!
-|
+| Rotas que só funcionam em domínios de tenants e já estão sob o prefixo /api
 */
-Route::middleware([
-    'api',
-    InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
-])->prefix('api')->group(function () {
-    Route::post('login', [AuthController::class, 'login']);
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('transactions', [TransactionController::class, 'index']);
-    });
 
+// A URL final será /api/login
+Route::post('/login', [AuthController::class, 'login']);
+
+// Grupo de rotas que exigem autenticação
+Route::middleware('auth:sanctum')->group(function () {
+    // A URL final será /api/transactions
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::post('/transactions', [TransactionController::class, 'store']);
 });
